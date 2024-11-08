@@ -88,3 +88,4 @@ function initializeApp() {
 
 // Start the app
 initializeApp();
+ 

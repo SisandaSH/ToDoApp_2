@@ -4,7 +4,9 @@
   "main": "script.js",
   "type": "module",
   "scripts": {
-    "test": "node --experimental-vm-modules node_modules/.bin/jest --coverage"
+    "start": "node server.js",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest --coverage",
+    "dev": "nodemon server.js"
   },
   "keywords": [],
   "author": "",
@@ -15,7 +17,8 @@
     "@babel/register": "^7.25.7",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.2",
+    "babel-jest": "^29.0.0",
     "jest": "^29.7.0",
-    "babel-jest": "^29.0.0"
+    "nodemon": "^3.1.7"
   }
 }
