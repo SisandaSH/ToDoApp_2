@@ -3,26 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>To-Do List App</title>
+    <title>Enhanced Todo List</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
     <div class="app">
-        <div class="container">
-            <h1>To-Do List</h1>
-            <input type="text" id="todoInput" placeholder="Enter your task here">
-            <button onclick="addTask()" >Add</button>
-    
-            <div id="displayBox"></div>
+        <h1>Todo List</h1>
+        <div class="input-container">
+            <input type="text" id="todoInput" placeholder="Enter your task here" autofocus>
+            <button id="addButton">Add</button>
         </div>
+        <div id="displayBox"></div>
     </div>
-
-    
-
-  
-
-    <script src="./js/script.js" type="module"></script>
-
+    <script type="module" src="js/DOM.js"></script>
 </body>
-</html>
+</html

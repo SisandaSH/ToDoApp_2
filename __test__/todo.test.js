@@ -1,42 +1,54 @@
-import { tasks, deleteTask, updateTask, pushToArray } from '../js/script'
+import { addTask, removeTask, editTask, getTasks } from '../js/taskManager';
 
-describe
-
-describe('tasks', () => { 
+describe('Task Manager Functions', () => {
+  
+  test('addTask should add a task to the tasks array', () => {
+    const tasks = [];
+    const task = { id: 1, name: 'Sample Task' };
     
-    it('[tasks] to be defined', () => {
-        expect(tasks).toBeDefined();
-    });
-    test('tasks added to array',()=>{
-        pushToArray("Wake up")
+    addTask(tasks, task);
+    expect(tasks).toContainEqual(task);
+  });
 
-        expect(tasks).toContain("Wake up")
-    })
- })
-
-
- describe('deleteTask', () => { 
+  test('removeTask should remove a task by id', () => {
+    const tasks = [{ id: 1, name: 'Sample Task' }];
+    const taskId = 1;
     
-    it('[deleteTask] to be defined', () => {
-        expect(tasks).toBeDefined();
-    });
-    test("test if an element is deleted",()=>{
-        const tasks = ['Shopping']
-        const deleteTask = (index) => {
-            tasks.splice(index, 1);
-        };
+    removeTask(tasks, taskId);
+    expect(tasks).toHaveLength(0);
+  });
 
-        deleteTask(0);
-        expect(tasks).not.toContain("Shopping");
-    })
- })
-
- 
- describe('updateTask', () => { 
+  test('removeTask should not remove anything if id is not found', () => {
+    const tasks = [{ id: 1, name: 'Sample Task' }];
+    const taskId = 2; // Non-existing ID
     
-    it('[updateTask] to be defined', () => {
-        expect(tasks).toBeDefined();
-    });
+    removeTask(tasks, taskId);
+    expect(tasks).toHaveLength(1); // Length should remain the same
+  });
 
+  test('editTask should update a task by id', () => {
+    const tasks = [{ id: 1, name: 'Old Task' }];
+    const taskId = 1;
+    const updatedTask = { name: 'Updated Task' };
+    
+    editTask(tasks, taskId, updatedTask);
+    expect(tasks[0].name).toBe('Updated Task');
+  });
 
- })
+  test('editTask should not change tasks if id is not found', () => {
+    const tasks = [{ id: 1, name: 'Sample Task' }];
+    const taskId = 2; // Non-existing ID
+    const updatedTask = { name: 'Updated Task' };
+    
+    editTask(tasks, taskId, updatedTask);
+    expect(tasks[0].name).toBe('Sample Task'); // Name should remain the same
+  });
+
+  test('getTasks should return the tasks array', () => {
+    const tasks = [{ id: 1, name: 'Sample Task' }];
+    
+    const result = getTasks(tasks);
+    expect(result).toEqual(tasks); // Should return the exact same array
+  });
+
+});
