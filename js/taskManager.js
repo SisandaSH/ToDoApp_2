@@ -1,3 +1,5 @@
+// taskManager.js
+
 const serverURL = "http://localhost:8000";
 
 // Fetch tasks from the backend
@@ -11,7 +13,7 @@ async function addTask(description) {
   if (!description.trim()) {
     return; // Exit if description is empty or only whitespace
   }
-
+  
   await fetch(`${serverURL}/add-description`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
