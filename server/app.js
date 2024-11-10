@@ -4,14 +4,10 @@ import cors from "cors";
 import taskRoutes from "./routes.js";
 
 const app = express();
-app.use(
-  cors({
-    origin: "http://localhost:8000", 
-  })
-);
+app.use(cors());
 app.use(bodyParser.json());
 
-app.use("/tasks", taskRoutes);
+app.use(taskRoutes);
 
 const PORT = 8000;
 app.listen(PORT, () => {

@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "test": "node --experimental-vm-modules node_modules/.bin/jest --coverage",
-    "dev": "nodemon .server.js"
+    "dev": "nodemon ./server/app.js"
   },
   "keywords": [],
   "author": "",
