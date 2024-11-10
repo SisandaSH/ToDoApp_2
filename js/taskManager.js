@@ -11,7 +11,7 @@ async function addTask(description) {
   if (!description.trim()) {
     return; // Exit if description is empty or only whitespace
   }
-  
+
   await fetch(`${serverURL}/add-description`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -54,4 +54,5 @@ async function deleteTask(id) {
   await fetch(`${serverURL}/delete-description/${id}`, { method: "DELETE" });
 }
 
+// Export all functions
 export { fetchTasks, addTask, updateTask, toggleTaskCompletion, deleteTask };
