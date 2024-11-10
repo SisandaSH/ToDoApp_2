@@ -1,5 +1,3 @@
-// DOM.js
-
 import { fetchTasks, addTask, updateTask, toggleTaskCompletion, deleteTask } from './taskManager.js';
 
 
