@@ -1,54 +1,93 @@
-import { addTask, removeTask, editTask, getTasks } from '../js/taskManager';
+import {
+  fetchTasks,
+  addTask,
+  updateTask,
+  toggleTaskCompletion,
+  deleteTask,
+} from "../js/taskManager";
+import jest from "jest"
 
-describe('Task Manager Functions', () => {
-  
-  test('addTask should add a task to the tasks array', () => {
-    const tasks = [];
-    const task = { id: 1, name: 'Sample Task' };
-    
-    addTask(tasks, task);
-    expect(tasks).toContainEqual(task);
+const serverURL = "http://localhost:7000";
+
+describe("Task API Utilities", () => {
+  beforeEach(() => {
+    global.fetch = jest.fn();
   });
 
-  test('removeTask should remove a task by id', () => {
-    const tasks = [{ id: 1, name: 'Sample Task' }];
-    const taskId = 1;
-    
-    removeTask(tasks, taskId);
-    expect(tasks).toHaveLength(0);
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
-  test('removeTask should not remove anything if id is not found', () => {
-    const tasks = [{ id: 1, name: 'Sample Task' }];
-    const taskId = 2; // Non-existing ID
-    
-    removeTask(tasks, taskId);
-    expect(tasks).toHaveLength(1); // Length should remain the same
+  test("fetchTasks should retrieve tasks from the backend", async () => {
+    const mockTasks = [{ id: 1, description: "Test task", completed: false }];
+    fetch.mockResolvedValueOnce({
+      json: jest.fn().mockResolvedValueOnce(mockTasks),
+    });
+
+    const tasks = await fetchTasks();
+    expect(fetch).toHaveBeenCalledWith(`${serverURL}/check-connection`);
+    expect(tasks).toEqual(mockTasks);
   });
 
-  test('editTask should update a task by id', () => {
-    const tasks = [{ id: 1, name: 'Old Task' }];
-    const taskId = 1;
-    const updatedTask = { name: 'Updated Task' };
-    
-    editTask(tasks, taskId, updatedTask);
-    expect(tasks[0].name).toBe('Updated Task');
+  test("addTask should send a POST request to add a task", async () => {
+    const description = "New task";
+    fetch.mockResolvedValueOnce({});
+
+    await addTask(description);
+    expect(fetch).toHaveBeenCalledWith(`${serverURL}/add-description`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ description }),
+    });
   });
 
-  test('editTask should not change tasks if id is not found', () => {
-    const tasks = [{ id: 1, name: 'Sample Task' }];
-    const taskId = 2; // Non-existing ID
-    const updatedTask = { name: 'Updated Task' };
-    
-    editTask(tasks, taskId, updatedTask);
-    expect(tasks[0].name).toBe('Sample Task'); // Name should remain the same
+  test("updateTask should send a PUT request to update a task", async () => {
+    const mockTasks = [{ id: 1, description: "Old task", completed: false }];
+    fetch.mockResolvedValueOnce({
+      json: jest.fn().mockResolvedValueOnce(mockTasks),
+    });
+
+    const id = 1;
+    const newDescription = "Updated task";
+    await updateTask(id, newDescription);
+
+    expect(fetch).toHaveBeenCalledWith(`${serverURL}/check-connection`);
+    expect(fetch).toHaveBeenCalledWith(`${serverURL}/update-description`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id,
+        description: newDescription,
+        completed: false,
+      }),
+    });
   });
 
-  test('getTasks should return the tasks array', () => {
-    const tasks = [{ id: 1, name: 'Sample Task' }];
-    
-    const result = getTasks(tasks);
-    expect(result).toEqual(tasks); // Should return the exact same array
+  test("toggleTaskCompletion should send a PUT request to toggle completion status", async () => {
+    const mockTasks = [{ id: 1, description: "Test task", completed: false }];
+    fetch.mockResolvedValueOnce({
+      json: jest.fn().mockResolvedValueOnce(mockTasks),
+    });
+
+    const id = 1;
+    await toggleTaskCompletion(id);
+
+    expect(fetch).toHaveBeenCalledWith(`${serverURL}/check-connection`);
+    expect(fetch).toHaveBeenCalledWith(`${serverURL}/update-description`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, description: "Test task", completed: true }),
+    });
   });
 
+  test("deleteTask should send a DELETE request to remove a task", async () => {
+    const id = 1;
+    fetch.mockResolvedValueOnce({});
+
+    await deleteTask(id);
+    expect(fetch).toHaveBeenCalledWith(
+      `${serverURL}/delete-description/${id}`,
+      { method: "DELETE" }
+    );
+  });
 });

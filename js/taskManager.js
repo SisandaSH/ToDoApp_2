@@ -1,51 +1,53 @@
-// taskManager.js
+const serverURL = "http://localhost:8000";
 
-let tasks = [];
+// Fetch tasks from the backend
+async function fetchTasks() {
+  const response = await fetch(`${serverURL}/check-connection`);
+  return response.json();
+}
 
-// Add a new task to the list and save it
-function addTaskToList(taskText) {
-    tasks.push({
-        text: taskText,
-        completed: false,
-        createdAt: new Date().toISOString()
+// Add a new task to the backend
+async function addTask(description) {
+  await fetch(`${serverURL}/add-description`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ description }),
+  });
+}
+
+// Update a task description in the backend
+async function updateTask(id, description) {
+  const tasks = await fetchTasks();
+  const task = tasks.find((task) => task.id === parseInt(id));
+  if (task) {
+    await fetch(`${serverURL}/update-description`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, description, completed: task.completed }),
     });
-    saveTasks();
+  }
 }
 
-// Delete a task from the list by index and save
-function deleteTaskFromList(index) {
-    tasks.splice(index, 1);
-    saveTasks();
+// Toggle task completion in the backend
+async function toggleTaskCompletion(id) {
+  const tasks = await fetchTasks();
+  const task = tasks.find((task) => task.id === parseInt(id));
+  if (task) {
+    await fetch(`${serverURL}/update-description`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id,
+        description: task.description,
+        completed: !task.completed,
+      }),
+    });
+  }
 }
 
-// Update task text by index if the task is not completed
-function updateTaskInList(index, newTaskText) {
-    if (!tasks[index].completed) {
-        tasks[index].text = newTaskText;
-        saveTasks();
-    } else {
-        alert("Completed tasks cannot be edited.");
-    }
+// Delete a task from the backend
+async function deleteTask(id) {
+  await fetch(`${serverURL}/delete-description/${id}`, { method: "DELETE" });
 }
 
-// Toggle completion status of a task by index and save
-function toggleTaskCompletion(index) {
-    tasks[index].completed = !tasks[index].completed;
-    saveTasks();
-}
-
-// Save tasks to localStorage
-function saveTasks() {
-    localStorage.setItem('todos', JSON.stringify(tasks));
-}
-
-// Load tasks from localStorage
-function loadTasks() {
-    const savedTasks = localStorage.getItem('todos');
-    if (savedTasks) {
-        tasks = JSON.parse(savedTasks);
-    }
-}
-
-// Export functions to be used in DOM.js
-export { tasks, addTaskToList, deleteTaskFromList, updateTaskInList, toggleTaskCompletion, loadTasks };
+export { fetchTasks, addTask, updateTask, toggleTaskCompletion, deleteTask };
