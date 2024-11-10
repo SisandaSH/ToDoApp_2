@@ -1,17 +1,19 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import pkg from 'pg';
+import cors from "cors"
 
 const { Pool } = pkg;
 const app = express();
+app.use(cors())
 app.use(bodyParser.json());
 
 const pool = new Pool({
     host: 'localhost',
     port: 5432,
     user: 'postgres',
-    password: '',
-    database: 'todoapp'
+    password: 'postgres',
+    database: 'todo'
 });
 
 // Check if the database connection works
@@ -28,10 +30,11 @@ app.get('/check-connection', async (req, res) => {
 // Insert a new task into the tasks table
 app.post('/add-description', async (req, res) => {
     const { description } = req.body;
+    const {completed} = req.body
     try {
         const result = await pool.query(
-            'INSERT INTO tasks(description) VALUES($1) RETURNING *',
-            [description]
+            'INSERT INTO tasks(description,completed) VALUES($1, $2) RETURNING *',
+            [description, completed]
         );
         res.json(result.rows[0]); // Send back the newly created task
     } catch (err) {
@@ -43,12 +46,12 @@ app.post('/add-description', async (req, res) => {
 
 // Update an existing task's description
 app.put('/update-description', async (req, res) => {
-    const { id, description } = req.body;
+    const { id, description, completed } = req.body; // Get both description and completed
 
     try {
         const result = await pool.query(
-            'UPDATE tasks SET description = $1 WHERE id = $2 RETURNING *',
-            [description, id]
+            'UPDATE tasks SET description = $1, completed = $2 WHERE id = $3 RETURNING *',
+            [description, completed, id] // Update description and completed status
         );
 
         if (result.rowCount === 0) {
@@ -61,6 +64,7 @@ app.put('/update-description', async (req, res) => {
         res.status(500).send('Error updating data');
     }
 });
+
 
 // Delete a task
 app.delete('/delete-description/:id', async (req, res) => {
@@ -79,7 +83,7 @@ app.delete('/delete-description/:id', async (req, res) => {
 });
 
 
-const PORT = 8000;
+const PORT = 7000;
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
