@@ -90,4 +90,12 @@ describe("Task API Utilities", () => {
       { method: "DELETE" }
     );
   });
+
+  test("fetchTasks should handle server errors gracefully", async () => {
+    fetch.mockRejectedValueOnce(new Error("Network Error"));
+  
+    await expect(fetchTasks()).rejects.toThrow("Network Error");
+    expect(fetch).toHaveBeenCalledWith(`${serverURL}/check-connection`);
+  });
+  
 });
