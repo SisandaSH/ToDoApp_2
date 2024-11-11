@@ -1,8 +1,7 @@
 import pool from "./db.js";
 
-
 // Check if the database connection works
-export const checkConnection = async (req, res) => {
+ async function checkConnection(req, res){
   try {
     const results = await pool.query("SELECT * FROM tasks");
     res.json(results.rows);
@@ -12,9 +11,8 @@ export const checkConnection = async (req, res) => {
   }
 };
 
-
 // Insert a new task into the tasks table
-export const addTask = async (req, res) => {
+ async function addTask(req, res){
   const { description, completed = false } = req.body;
   try {
     const result = await pool.query(
@@ -30,7 +28,7 @@ export const addTask = async (req, res) => {
 
 
 // Update an existing task's description
-export const updateTask = async (req, res) => {
+ const updateTask = async (req, res) => {
   const { id, description, completed } = req.body;
   try {
     const result = await pool.query(
@@ -51,7 +49,7 @@ export const updateTask = async (req, res) => {
 
 
 // Delete a task
-export const deleteTask = async (req, res) => {
+ const deleteTask = async (req, res) => {
   const { id } = req.params;
   try {
     const result = await pool.query("DELETE FROM tasks WHERE id = $1", [id]);
@@ -65,3 +63,5 @@ export const deleteTask = async (req, res) => {
     res.status(500).send("Error deleting data");
   }
 };
+
+export { checkConnection, addTask, updateTask, deleteTask}
