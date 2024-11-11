@@ -1,94 +1,162 @@
-import {
-  fetchTasks,
-  addTask,
-  updateTask,
-  toggleTaskCompletion,
-  deleteTask,
-} from "../js/taskManager";
-import jest from "jest"
+// todo.test.js
 
-const serverURL = "http://localhost:7000";
+import { fetchTasks, addTask, updateTask, toggleTaskCompletion, deleteTask } from "../js/taskManager";
+import { jest } from "@jest/globals"; // Explicitly import jest for ESM
+
+// Mock the global fetch function
+global.fetch = jest.fn();
 
 describe("Task API Utilities", () => {
   beforeEach(() => {
-    global.fetch = jest.fn();
+    fetch.mockClear();
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
+  // Tests for fetchTasks
   test("fetchTasks should retrieve tasks from the backend", async () => {
-    const mockTasks = [{ id: 1, description: "Test task", completed: false }];
+    const mockTasks = [{ id: 1, description: "Sample Task", completed: false }];
     fetch.mockResolvedValueOnce({
-      json: jest.fn().mockResolvedValueOnce(mockTasks),
+      json: async () => mockTasks,
     });
 
     const tasks = await fetchTasks();
-    expect(fetch).toHaveBeenCalledWith(`${serverURL}/check-connection`);
+    expect(fetch).toHaveBeenCalledWith("http://localhost:8000/check-connection");
     expect(tasks).toEqual(mockTasks);
   });
 
-  test("addTask should send a POST request to add a task", async () => {
-    const description = "New task";
-    fetch.mockResolvedValueOnce({});
+  test("fetchTasks should handle an empty task list", async () => {
+    fetch.mockResolvedValueOnce({
+      json: async () => [],
+    });
 
-    await addTask(description);
-    expect(fetch).toHaveBeenCalledWith(`${serverURL}/add-description`, {
+    const tasks = await fetchTasks();
+    expect(tasks).toEqual([]);
+  });
+
+  test("fetchTasks should handle multiple tasks", async () => {
+    const mockTasks = [
+      { id: 1, description: "Task 1", completed: false },
+      { id: 2, description: "Task 2", completed: true },
+    ];
+    fetch.mockResolvedValueOnce({
+      json: async () => mockTasks,
+    });
+
+    const tasks = await fetchTasks();
+    expect(tasks).toEqual(mockTasks);
+  });
+
+  // Tests for addTask
+  test("addTask should send a POST request to add a task", async () => {
+    fetch.mockResolvedValueOnce({ status: 201 });
+
+    await addTask("New Task");
+
+    expect(fetch).toHaveBeenCalledWith("http://localhost:8000/add-description", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ description }),
+      body: JSON.stringify({ description: "New Task" }),
     });
   });
 
+  test("addTask should ignore empty description", async () => {
+    await addTask("");
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  test("addTask should handle special characters in description", async () => {
+    fetch.mockResolvedValueOnce({ status: 201 });
+
+    await addTask("New Task! @ #");
+
+    expect(fetch).toHaveBeenCalledWith("http://localhost:8000/add-description", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ description: "New Task! @ #" }),
+    });
+  });
+
+  // Tests for updateTask
   test("updateTask should send a PUT request to update a task", async () => {
-    const mockTasks = [{ id: 1, description: "Old task", completed: false }];
-    fetch.mockResolvedValueOnce({
-      json: jest.fn().mockResolvedValueOnce(mockTasks),
-    });
+    const mockTasks = [{ id: 1, description: "Old Task", completed: false }];
+    fetch
+      .mockResolvedValueOnce({ json: async () => mockTasks })
+      .mockResolvedValueOnce({ status: 200 });
 
-    const id = 1;
-    const newDescription = "Updated task";
-    await updateTask(id, newDescription);
+    await updateTask(1, "Updated Task");
 
-    expect(fetch).toHaveBeenCalledWith(`${serverURL}/check-connection`);
-    expect(fetch).toHaveBeenCalledWith(`${serverURL}/update-description`, {
+    expect(fetch).toHaveBeenCalledWith("http://localhost:8000/update-description", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id,
-        description: newDescription,
-        completed: false,
-      }),
+      body: JSON.stringify({ id: 1, description: "Updated Task", completed: false }),
     });
   });
 
-  test("toggleTaskCompletion should send a PUT request to toggle completion status", async () => {
-    const mockTasks = [{ id: 1, description: "Test task", completed: false }];
-    fetch.mockResolvedValueOnce({
-      json: jest.fn().mockResolvedValueOnce(mockTasks),
-    });
+  test("updateTask should do nothing if task ID is invalid", async () => {
+    fetch.mockResolvedValueOnce({ json: async () => [] });
 
-    const id = 1;
-    await toggleTaskCompletion(id);
+    await updateTask(999, "Updated Task");
 
-    expect(fetch).toHaveBeenCalledWith(`${serverURL}/check-connection`);
-    expect(fetch).toHaveBeenCalledWith(`${serverURL}/update-description`, {
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  test("updateTask should handle special characters in the updated description", async () => {
+    const mockTasks = [{ id: 1, description: "Old Task", completed: false }];
+    fetch
+      .mockResolvedValueOnce({ json: async () => mockTasks })
+      .mockResolvedValueOnce({ status: 200 });
+
+    await updateTask(1, "Updated! @ Task");
+
+    expect(fetch).toHaveBeenCalledWith("http://localhost:8000/update-description", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, description: "Test task", completed: true }),
+      body: JSON.stringify({ id: 1, description: "Updated! @ Task", completed: false }),
     });
   });
 
+  // Tests for toggleTaskCompletion
+  test("toggleTaskCompletion should toggle completion status", async () => {
+    const mockTasks = [{ id: 1, description: "Task", completed: false }];
+    fetch
+      .mockResolvedValueOnce({ json: async () => mockTasks })
+      .mockResolvedValueOnce({ status: 200 });
+
+    await toggleTaskCompletion(1);
+
+    expect(fetch).toHaveBeenCalledWith("http://localhost:8000/update-description", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: 1, description: "Task", completed: true }),
+    });
+  });
+
+  test("toggleTaskCompletion should handle a non-existent task", async () => {
+    fetch.mockResolvedValueOnce({ json: async () => [] });
+
+    await toggleTaskCompletion(999);
+
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  // Tests for deleteTask
   test("deleteTask should send a DELETE request to remove a task", async () => {
-    const id = 1;
-    fetch.mockResolvedValueOnce({});
+    fetch.mockResolvedValueOnce({ status: 200 });
 
-    await deleteTask(id);
-    expect(fetch).toHaveBeenCalledWith(
-      `${serverURL}/delete-description/${id}`,
-      { method: "DELETE" }
-    );
+    await deleteTask(1);
+
+    expect(fetch).toHaveBeenCalledWith("http://localhost:8000/delete-description/1", {
+      method: "DELETE",
+    });
+  });
+
+  test("deleteTask should handle non-existent task gracefully", async () => {
+    fetch.mockResolvedValueOnce({ status: 404 });
+
+    await deleteTask(999);
+
+    expect(fetch).toHaveBeenCalledWith("http://localhost:8000/delete-description/999", {
+      method: "DELETE",
+    });
   });
 
   test("fetchTasks should handle server errors gracefully", async () => {

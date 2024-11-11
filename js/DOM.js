@@ -1,78 +1,83 @@
 // DOM.js
 
-import { fetchTasks, addTask, updateTask, toggleTaskCompletion, deleteTask } from './taskManager.js';
-
+import { tasks, addTaskToList, deleteTaskFromList, updateTaskInList, toggleTaskCompletion, loadTasks } from './taskManager.js';
 
 // Render tasks to the displayBox
-async function renderTasks() {
+function renderTasks() {
     const displayBox = document.getElementById('displayBox');
     displayBox.innerHTML = '';
 
-    const tasks = await fetchTasks();
-
-    tasks.forEach((task) => {
+    tasks.forEach((task, index) => {
         const taskDiv = document.createElement('div');
         taskDiv.className = 'task';
         
         taskDiv.innerHTML = `
-            <span class="${task.completed ? 'completed' : ''}">${task.description}</span>
+            <span class="${task.completed ? 'completed' : ''}">${task.text}</span>
             <div class="task-buttons">
-                <button class="edit-btn" data-id="${task.id}" ${task.completed ? 'disabled' : ''}>Edit</button>
-                <button class="complete-btn" data-id="${task.id}">${task.completed ? 'Undo' : 'Complete'}</button>
-                <button class="delete-btn" data-id="${task.id}">Delete</button>
+                <button class="edit-btn" data-index="${index}" ${task.completed ? 'disabled' : ''}>Edit</button>
+                <button class="complete-btn" data-index="${index}">${task.completed ? 'Undo' : 'Complete'}</button>
+                <button class="delete-btn" data-index="${index}">Delete</button>
             </div>
         `;
         
         displayBox.appendChild(taskDiv);
     });
 
+    // Add event listeners for dynamically created buttons
     document.querySelectorAll('.edit-btn').forEach(button =>
-        button.addEventListener('click', (e) => handleUpdateTask(e.target.dataset.id))
+        button.addEventListener('click', (e) => handleUpdateTask(e.target.dataset.index))
     );
     document.querySelectorAll('.complete-btn').forEach(button =>
-        button.addEventListener('click', (e) => handleToggleComplete(e.target.dataset.id))
+        button.addEventListener('click', (e) => handleToggleComplete(e.target.dataset.index))
     );
     document.querySelectorAll('.delete-btn').forEach(button =>
-        button.addEventListener('click', (e) => handleDeleteTask(e.target.dataset.id))
+        button.addEventListener('click', (e) => handleDeleteTask(e.target.dataset.index))
     );
 }
 
-// Add task function
-async function handleAddTask() {
+// Add task handler
+function handleAddTask() {
     const input = document.getElementById('todoInput');
     const taskText = input.value.trim();
     
     if (taskText) {
-        await addTask(taskText);
+        addTaskToList(taskText);
         input.value = '';
         renderTasks();
     }
 }
 
-// Update task function
-async function handleUpdateTask(id) {
-    const newTaskText = prompt("Update your task:");
-    if (newTaskText !== null && newTaskText.trim() !== "") {
-        await updateTask(id, newTaskText.trim());
-        renderTasks();
+// Update task handler
+function handleUpdateTask(index) {
+    const task = tasks[index];
+    if (!task.completed) {
+        const newTaskText = prompt("Update your task:", task.text);
+        if (newTaskText !== null && newTaskText.trim() !== "") {
+            updateTaskInList(index, newTaskText.trim());
+            renderTasks();
+        }
+    } else {
+        alert("Completed tasks cannot be edited.");
     }
 }
 
-// Toggle complete function
-async function handleToggleComplete(id) {
-    await toggleTaskCompletion(id);
+// Toggle complete handler
+function handleToggleComplete(index) {
+    toggleTaskCompletion(index);
     renderTasks();
 }
 
-// Delete task function
-async function handleDeleteTask(id) {
-    await deleteTask(id);
+// Delete task handler
+function handleDeleteTask(index) {
+    deleteTaskFromList(index);
     renderTasks();
 }
 
-// Initialize app
+// Initialize app and load tasks on startup
 function initializeApp() {
+    loadTasks();
     renderTasks();
+    
     document.getElementById('addButton').addEventListener('click', handleAddTask);
     document.getElementById('todoInput').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
@@ -81,5 +86,6 @@ function initializeApp() {
     });
 }
 
-
+// Start the app
 initializeApp();
+ 
