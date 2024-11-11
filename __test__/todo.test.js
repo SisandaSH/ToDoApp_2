@@ -159,7 +159,7 @@ describe("Task API Utilities", () => {
     });
   });
 
-  test("fetchTasks should handle server errors gracefully", async () => {
+  test("fetchTasks should handle server errors", async () => {
     fetch.mockRejectedValueOnce(new Error("Network Error"));
   
     await expect(fetchTasks()).rejects.toThrow("Network Error");
